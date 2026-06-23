@@ -1,60 +1,64 @@
-# nba-champ-predictor
-# NBA Championship Prediction
+# NBA Championship Predictor
 
-This project utilizes machine learning techniques to predict NBA championship outcomes based on historical team performance metrics. The code is organized into several key sections, each contributing to the analysis and prediction process.
+Predict how far each NBA team will go in the playoffs — measured in **playoff wins**
+(0–16, where 16 = champion) — from regular-season performance, then rank the league to
+surface the season's title contenders.
 
-## Table of Contents
+The model learns from every playoff team since 2003. Each team-season is described purely by
+its **league rank** in a stat (`1` = best in the NBA that year), so eras with very different
+pace and scoring stay comparable.
 
-1. [Introduction](#introduction)
-2. [Dependencies](#dependencies)
-3. [Data Preparation](#data-preparation)
-4. [Exploratory Data Analysis (EDA)](#exploratory-data-analysis-eda)
-5. [Model Training](#model-training)
-6. [Model Evaluation](#model-evaluation)
-7. [Prediction](#prediction)
-8. [Results](#results)
+## Quickstart
 
-## Introduction
+```bash
+pip install -r requirements.txt
+jupyter notebook predict.ipynb
+```
 
-The primary objective of this project is to predict NBA championship outcomes using machine learning models. The project includes data preprocessing, exploratory data analysis (EDA), model training, evaluation, and predictions on new data.
+To refresh the data for a new season, bump `CURRENT_SEASON` / `LAST_COMPLETE_SEASON` in
+`build_dataset.py` and run:
 
-## Dependencies
+```bash
+python build_dataset.py
+```
 
-- Pandas: Data manipulation and analysis library.
-- NumPy: Numerical computing library.
-- Seaborn and Matplotlib: Data visualization libraries.
-- Scikit-learn: Machine learning library for model training and evaluation.
-- XGBoost: Gradient boosting library for regression.
+## How it works
 
-## Data Preparation
+1. **`build_dataset.py`** — a reproducible data pipeline. It scrapes team, opponent, and
+   advanced stats from [Basketball-Reference](https://www.basketball-reference.com/), converts
+   every stat to a league rank (`1` = best for the team), and attaches each playoff team's
+   actual playoff wins (parsed from the playoff bracket). It writes:
+   - `past_league_rankings.csv` — training data, every playoff team **2003–2025**
+   - `2026_prediction.csv` — the current season, all 30 teams, target left blank
+2. **`predict.ipynb`** — loads the data, selects features by correlation with playoff wins,
+   trains three regressors (Linear Regression, Random Forest, XGBoost), validates them
+   honestly, and predicts the current title race.
 
-- The project reads historical NBA data and recent data from CSV files.
-- Unnecessary columns are dropped to focus on relevant features.
-- Variables with a Pearson's correlation coefficient greater than 0.25 with playoff wins are selected.
+## What's modeled
 
-## Exploratory Data Analysis (EDA)
+- **Target:** playoff wins (regression, 0–16).
+- **Features:** team & opponent per-game stats plus advanced metrics (SRS, ORtg/DRtg, Four
+   Factors, etc.), each as a league rank, filtered to `|correlation with playoff wins| > 0.25`.
+- **Validation:** *walk-forward* — every season is predicted using only the seasons before it,
+   so there is no leakage between teams in the same year. Reported metrics:
+  - **MAE** of predicted playoff wins
+  - **Champion hit-rate** — how often the model's #1 team actually won the title
+  - **Top-3 hit-rate** — how often the eventual champion was in the model's top 3
 
-- Visualizations, including heatmaps, illustrate the correlation between selected variables and playoff wins.
-- The relationship between specific variables, such as eFG% and O_BLK, is explored.
+## Repo layout
 
-## Model Training
+| File | Purpose |
+| --- | --- |
+| `build_dataset.py` | Scrapes Basketball-Reference and regenerates the CSVs |
+| `predict.ipynb` | Analysis, modeling, backtest, and current-season prediction |
+| `past_league_rankings.csv` | Training data (2003–2025, generated) |
+| `2026_prediction.csv` | Current-season feature ranks for prediction (generated) |
+| `requirements.txt` | Python dependencies |
+| `2020_league_rankings_before_orlando.csv` | Original hand-built file, kept for reference (superseded by the pipeline) |
 
-- The dataset is split into training and validation sets.
-- Linear Regression, Random Forest Regression, and XGBoost Regression models are trained using Scikit-learn and XGBoost libraries.
+## Notes & caveats
 
-## Model Evaluation
-
-- Mean Absolute Error is used to evaluate the performance of each model on the validation set.
-
-## Prediction
-
-- The trained models are applied to predict playoff wins for new data representing the latest NBA season.
-
-## Results
-
-- Predictions are made using Linear Regression, Random Forest Regression, and XGBoost Regression models.
-- The results are stored in a DataFrame and presented, showing the predicted playoff wins for each team.
-
-Feel free to explore the Jupyter Notebooks in the `notebooks` directory for detailed insights into each step of the project.
-
-
+- Basketball-Reference rate-limits scrapers; `build_dataset.py` waits between requests and
+  caches pages under `.cache/`, so re-runs are fast and gentle.
+- The model captures *regular-season strength*, not injuries, matchups, or playoff variance —
+  treat the output as "who is best positioned," not a guarantee.

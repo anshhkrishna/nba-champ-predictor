@@ -1,0 +1,9 @@
+# scraper cache
+.cache/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
