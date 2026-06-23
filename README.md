@@ -45,6 +45,45 @@ python build_dataset.py
   - **Champion hit-rate** — how often the model's #1 team actually won the title
   - **Top-3 hit-rate** — how often the eventual champion was in the model's top 3
 
+## Results
+
+### Backtest (walk-forward, scoring seasons 2013–2025)
+
+Each season is predicted using only the seasons that came before it.
+
+| Model | MAE | Champion hit-rate | Top-3 hit-rate |
+| --- | --- | --- | --- |
+| Linear Regression | 3.12 | 38% | 85% |
+| Random Forest | 2.83 | 31% | 85% |
+| XGBoost | 2.91 | 31% | 77% |
+
+The model is much better at narrowing the field than at calling the exact winner: the eventual
+champion lands in its **top 3 about 85%** of the time, while its single #1 pick wins the title
+~31–38% of the time.
+
+### 2025–26 prediction
+
+Trained on all 23 completed seasons (2003–2025), averaged across the three models:
+
+| Rank | Team | Predicted playoff wins |
+| --- | --- | --- |
+| 1 | **Oklahoma City Thunder** | 11.1 |
+| 2 | San Antonio Spurs | 8.7 |
+| 3 | Detroit Pistons | 8.5 |
+| 4 | Los Angeles Lakers | 8.4 |
+| 5 | Denver Nuggets | 7.8 |
+| 6 | Boston Celtics | 7.4 |
+| 7 | New York Knicks | 7.0 |
+| 8 | Cleveland Cavaliers | 5.1 |
+
+**Predicted champion: Oklahoma City Thunder.** Read the *ranking* as the title signal rather
+than the raw win count — the regressor pulls every team toward the mean, so no one reaches the
+16 wins an actual title requires. Numbers will shift as the season's stats change; re-run
+`build_dataset.py` to refresh them.
+
+> Caveat: the model only sees regular-season strength (as league ranks). It knows nothing about
+> injuries, matchups, or playoff variance, so treat the output as "who is best positioned."
+
 ## Repo layout
 
 | File | Purpose |
