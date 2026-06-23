@@ -65,6 +65,8 @@ champion lands in its **top 3 about 85%** of the time, while its single #1 pick 
 
 Trained on all 23 completed seasons (2003–2025), averaged across the three models:
 
+![2025–26 championship contenders](images/2026_prediction.png)
+
 | Rank | Team | Predicted playoff wins |
 | --- | --- | --- |
 | 1 | **Oklahoma City Thunder** | 11.1 |
